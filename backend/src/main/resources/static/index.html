@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Jogo educativo Cyber Conexo"><title>Cyber Conexo</title>
+<link rel="stylesheet" href="/css/style.css"><script src="/js/app.js" defer></script>
+</head>
+<body>
+<header><a class="brand" href="/">🛡️ Cyber Conexo</a><span>Conecte os conceitos. Proteja o conhecimento.</span></header>
+<main class="wrap">
+<section class="hero"><p class="eyebrow">DESAFIO DE CONHECIMENTO</p><h1>Encontre as conexões.</h1><p>Selecione quatro palavras que tenham algo em comum. Existem quatro grupos escondidos.</p></section>
+<section id="welcome" class="panel"><label for="playerName">Como podemos te chamar?</label><div class="start"><input id="playerName" maxlength="80" placeholder="Digite seu nome"><button id="startButton">Começar partida</button></div><small>Cada grupo correto vale 25 pontos. Nota máxima: 100.</small></section>
+<section id="game" class="hidden">
+<div class="stats"><div><small>Pontuação</small><b id="score">0</b></div><div><small>Grupos</small><b id="progress">0/4</b></div><div><small>Erros</small><b id="mistakes">0</b></div></div>
+<section class="panel"><div class="board-head"><div><p class="eyebrow">TABULEIRO</p><h2 id="puzzleTitle">Fundamentos Linux e Segurança</h2></div><small id="selectionCount">0 de 4 selecionadas</small></div>
+<div id="board" class="board"></div><div class="actions"><button id="clearButton" class="secondary">Limpar seleção</button><button id="guessButton" disabled>Conferir grupo</button></div><p id="feedback" role="status" aria-live="polite"></p></section>
+<div id="foundGroups" class="found"></div></section>
+<section id="finish" class="panel hidden finish"><div class="trophy">🏆</div><p class="eyebrow">DESAFIO CONCLUÍDO</p><h2>Mandou bem!</h2><p>Nota final</p><strong id="finalScore">100/100</strong><p id="finalDetails"></p><button id="restartButton">Jogar novamente</button></section>
+<footer>Cyber Conexo · Aprender segurança também é conectar conceitos.</footer>
+</main>
+</body></html>
