@@ -195,6 +195,7 @@ button { font-size: 1rem; }
   overflow-wrap: anywhere;
 }
 .tile:hover { border-color: var(--amber); }
+.tile.hinted { box-shadow: inset 0 0 0 2px var(--amber); }
 .tile.selected {
   background: var(--amber);
   color: var(--amber-ink);

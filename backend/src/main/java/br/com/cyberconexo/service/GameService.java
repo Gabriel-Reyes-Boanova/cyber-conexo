@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -49,8 +51,14 @@ public class GameService {
         Puzzle puzzle = puzzles.findByIdAndActiveTrue(request.puzzleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tabuleiro não encontrado."));
         GameSession game = sessions.save(new GameSession(puzzle, request.playerName().trim()));
+        List<WordGroup> puzzleGroups = groups.findAllWithWordsByPuzzleId(puzzle.getId());
+        List<List<String>> hintGroups = puzzleGroups.stream().map(group -> {
+            List<String> words = new ArrayList<>(group.getWords().stream().map(w -> w.getValue()).toList());
+            Collections.shuffle(words);
+            return words;
+        }).toList();
         return new StartGameResponse(game.getId(), game.getPlayerName(), puzzle.getId(), puzzle.getTitle(),
-                (int) groups.countByPuzzleId(puzzle.getId()), puzzleService.shuffledWords(puzzle.getId()));
+                puzzleGroups.size(), puzzleService.shuffledWords(puzzle.getId()), hintGroups);
     }
 
     /**

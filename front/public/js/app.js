@@ -52,6 +52,9 @@ const state = {
   startedAt: 0,
   timer: null,
   busy: false,
+  hintGroups: [],
+  hintsUsed: 0,
+  hintGroupWords: [],
 };
 
 // ---------- telas ----------
@@ -129,6 +132,9 @@ async function startGame(puzzle) {
       gameId: game.gameId,
       totalGroups: game.totalGroups,
       board: game.words,
+      hintGroups: game.hintGroups ?? [],
+      hintsUsed: 0,
+      hintGroupWords: [],
       selected: new Set(),
       startedAt: Date.now(),
     });
@@ -136,6 +142,9 @@ async function startGame(puzzle) {
     $('gameTitle').textContent = game.puzzleTitle;
     $('gameSubtitle').textContent = `${DIFFICULTY[puzzle.difficulty] ?? ''} · ${TOPIC[puzzle.topic] ?? ''}`;
     $('foundGroups').replaceChildren();
+    setHintGroup();
+    $('hintButton').textContent = 'Dica (0/2)';
+    $('hintButton').disabled = false;
     $('explanations').replaceChildren();
     updateStats({ score: 0, mistakes: 0, groupsFound: 0 });
     say('feedback', 'Selecione quatro palavras que tenham algo em comum.');
@@ -159,10 +168,23 @@ function renderBoard() {
       text: word,
       attrs: { type: 'button', 'aria-pressed': String(selected) },
     });
+    if (state.hintGroupWords.slice(0, state.hintsUsed === 1 ? 2 : state.hintsUsed === 2 ? 3 : 0).includes(word)) tile.classList.add('hinted');
     tile.addEventListener('click', () => toggleWord(word));
     return tile;
   }));
   $('guessButton').disabled = state.selected.size !== 4 || state.busy;
+}
+
+function setHintGroup() {
+  state.hintGroupWords = state.hintGroups.find((group) => group.every((word) => state.board.includes(word))) ?? [];
+}
+
+function revealHint() {
+  if (state.hintsUsed >= 2 || state.busy) return;
+  state.hintsUsed += 1;
+  $('hintButton').textContent = state.hintsUsed === 1 ? 'Dica (1/2)' : 'Dicas usadas (2/2)';
+  $('hintButton').disabled = state.hintsUsed === 2;
+  renderBoard();
 }
 
 function toggleWord(word) {
@@ -202,6 +224,10 @@ async function submitGuess() {
     if (r.correct) {
       addFoundGroup(r, words);
       state.board = state.board.filter((w) => !words.includes(w));
+      state.hintsUsed = 0;
+      setHintGroup();
+      $('hintButton').textContent = 'Dica (0/2)';
+      $('hintButton').disabled = state.board.length === 0;
       say('feedback', r.message, 'success');
     } else {
       say('feedback', r.message, r.oneAway ? 'near' : 'error');
@@ -296,6 +322,7 @@ async function loadRanking() {
 // ---------- eventos ----------
 $('nameForm').addEventListener('submit', (e) => e.preventDefault());
 $('guessButton').addEventListener('click', submitGuess);
+$('hintButton').addEventListener('click', revealHint);
 $('clearButton').addEventListener('click', () => { state.selected.clear(); renderBoard(); say('feedback', 'Seleção limpa.'); });
 $('shuffleButton').addEventListener('click', () => { state.board = shuffled(state.board); renderBoard(); });
 $('navHome').addEventListener('click', () => { stopTimer(); show('screenHome'); });
