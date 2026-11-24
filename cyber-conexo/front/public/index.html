@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cyber Conexo: jogo de associação para aprender Linux e cibersegurança.">
+  <title>Cyber Conexo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%A1%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="prompt" href="/" aria-label="Cyber Conexo, página inicial">
+      <span class="prompt-user">jogador@cyber-conexo</span><span class="prompt-sep">:~$</span>
+      <span class="prompt-cursor" aria-hidden="true"></span>
+    </a>
+    <nav>
+      <button type="button" class="link" id="navHome">Jogar</button>
+      <button type="button" class="link" id="navRanking">Ranking</button>
+    </nav>
+  </header>
+
+  <main class="page">
+
+    <!-- Início: nome + escolha do tabuleiro -->
+    <section id="screenHome">
+      <h1>Cyber Conexo</h1>
+      <p class="lead">São 16 palavras de Linux e cibersegurança. Encontre os quatro grupos de quatro palavras que têm algo em comum.</p>
+
+      <form id="nameForm" class="name-form" autocomplete="off">
+        <label for="playerName">Seu nome no ranking</label>
+        <input id="playerName" name="playerName" minlength="2" maxlength="30" required placeholder="ex.: ana.silva">
+        <p class="hint">Letras, números, espaço, ponto, hífen e sublinhado. De 2 a 30 caracteres.</p>
+      </form>
+
+      <h2>Escolha um tabuleiro</h2>
+      <p id="homeMessage" class="message" role="status" aria-live="polite"></p>
+      <ul id="puzzleList" class="puzzle-list"></ul>
+    </section>
+
+    <!-- Partida -->
+    <section id="screenGame" hidden>
+      <div class="game-head">
+        <div>
+          <h2 id="gameTitle"></h2>
+          <p id="gameSubtitle" class="hint"></p>
+        </div>
+        <dl class="stats">
+          <div><dt>Tempo</dt><dd id="statTime">0:00</dd></div>
+          <div><dt>Grupos</dt><dd id="statGroups">0/4</dd></div>
+          <div><dt>Erros</dt><dd id="statMistakes">0</dd></div>
+          <div><dt>Nota</dt><dd id="statScore">0</dd></div>
+        </dl>
+      </div>
+
+      <div id="foundGroups" class="found-groups"></div>
+      <div id="board" class="board" role="group" aria-label="Palavras do tabuleiro"></div>
+
+      <div class="actions">
+        <button type="button" class="secondary" id="shuffleButton">Embaralhar</button>
+        <button type="button" class="secondary" id="clearButton">Limpar seleção</button>
+        <button type="button" id="guessButton" disabled>Conferir grupo</button>
+      </div>
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+
+      <div id="explanations" class="explanations"></div>
+    </section>
+
+    <!-- Resultado -->
+    <section id="screenResult" hidden>
+      <h2>Tabuleiro concluído</h2>
+      <p class="score-line"><span id="resultScore">100</span><span class="score-max">/100</span></p>
+      <p id="resultDetails" class="lead"></p>
+      <div class="actions">
+        <button type="button" id="nextPuzzleButton">Próximo tabuleiro</button>
+        <button type="button" class="secondary" id="resultRankingButton">Ver ranking</button>
+        <button type="button" class="secondary" id="resultHomeButton">Escolher outro</button>
+      </div>
+    </section>
+
+    <!-- Ranking -->
+    <section id="screenRanking" hidden>
+      <h2>Ranking</h2>
+      <p class="hint">Ordem: maior nota, menos erros, menor tempo. Só partidas concluídas.</p>
+      <label for="rankingFilter">Tabuleiro</label>
+      <select id="rankingFilter"></select>
+      <p id="rankingMessage" class="message" role="status" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table id="rankingTable">
+          <thead><tr><th>#</th><th>Jogador</th><th>Tabuleiro</th><th>Nota</th><th>Erros</th><th>Tempo</th></tr></thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">Projeto acadêmico. A pontuação é calculada no servidor.</footer>
+</body>
+</html>

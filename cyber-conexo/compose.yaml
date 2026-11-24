@@ -1,0 +1,78 @@
+# Cyber Conexo: banco + API + front (Nginx) + pgAdmin.
+# Só o front (Nginx) é publicado para a rede. Banco e API ficam internos.
+# pgAdmin fica preso ao localhost da VM (acesse por túnel SSH).
+
+services:
+  database:
+    image: postgres:17-alpine
+    container_name: cyberconexo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cyberconexo}
+      POSTGRES_USER: ${POSTGRES_USER:-cyberuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cyberuser} -d ${POSTGRES_DB:-cyberconexo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [cyber-network]
+
+  backend:
+    build: ./backend
+    container_name: cyberconexo-api
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB:-cyberconexo}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-cyberuser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+    expose:
+      - "8080"            # visível só dentro da rede do Compose
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [cyber-network]
+
+  frontend:
+    build: ./front
+    container_name: cyberconexo-web
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:8080"   # única porta aberta para a rede da VM
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [cyber-network]
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    container_name: cyberconexo-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:?Defina PGADMIN_DEFAULT_EMAIL no .env}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?Defina PGADMIN_DEFAULT_PASSWORD no .env}
+    ports:
+      - "${PGADMIN_BIND:-127.0.0.1}:5050:80"
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks: [cyber-network]
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  cyber-network:
+    driver: bridge

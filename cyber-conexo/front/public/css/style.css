@@ -1,0 +1,229 @@
+/* Cyber Conexo: terminal em grafite com âmbar.
+   Sem fontes externas (funciona em laboratório sem internet e com CSP restritiva). */
+
+:root {
+  color-scheme: dark;
+  --bg: #16181d;
+  --panel: #1e2128;
+  --key: #262a33;
+  --line: #343a46;
+  --text: #e6e3da;
+  --dim: #9097a5;
+  --amber: #f2b84b;
+  --amber-ink: #231a05;
+  --ok: #8fc79a;
+  --bad: #f08b78;
+  --l1: #8fc79a;
+  --l2: #7db4de;
+  --l3: #c99be0;
+  --l4: #f0937e;
+  --mono: ui-monospace, "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-padding-top: 1rem; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+[hidden] { display: none !important; }
+
+h1, h2, h3, button, input, select, th, .prompt, .tile, .found, dt, dd, .score-line {
+  font-family: var(--mono);
+}
+
+h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1; margin: 0 0 .75rem; letter-spacing: -.02em; }
+h2 { font-size: 1.25rem; margin: 2rem 0 .5rem; }
+h3 { font-size: 1rem; margin: 0 0 .25rem; }
+p { margin: 0 0 1rem; }
+
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* ---------- barra superior ---------- */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: .9rem max(1rem, calc((100vw - 760px) / 2));
+  border-bottom: 1px solid var(--line);
+}
+.prompt { color: var(--dim); text-decoration: none; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prompt-user { color: var(--ok); }
+.prompt-cursor {
+  display: inline-block;
+  width: .55em;
+  height: 1.05em;
+  margin-left: .35em;
+  vertical-align: text-bottom;
+  background: var(--amber);
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .prompt-cursor { animation: none; } }
+
+nav { display: flex; gap: .25rem; }
+button.link {
+  background: none;
+  border: 0;
+  color: var(--text);
+  padding: .4rem .6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .95rem;
+}
+button.link:hover { background: var(--panel); color: var(--amber); }
+
+/* ---------- página ---------- */
+.page { width: min(760px, 100% - 2rem); margin: 2.5rem auto 3rem; flex: 1; }
+.lead { color: var(--dim); font-size: 1.05rem; max-width: 60ch; }
+.hint { color: var(--dim); font-size: .875rem; margin: .35rem 0 0; }
+
+/* ---------- formulário ---------- */
+.name-form { margin: 1.5rem 0 0; max-width: 28rem; }
+label { display: block; font-weight: 600; margin-bottom: .4rem; }
+input, select {
+  width: 100%;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: .7rem .8rem;
+  font-size: 1rem;
+}
+input:focus, select:focus { outline: 2px solid var(--amber); outline-offset: 0; border-color: var(--amber); }
+
+.message { min-height: 1.5rem; margin: .25rem 0 .75rem; color: var(--dim); }
+.message.error, .feedback.error { color: var(--bad); }
+.feedback.success { color: var(--ok); }
+.feedback.near { color: var(--amber); }
+
+/* ---------- lista de tabuleiros ---------- */
+.puzzle-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.puzzle-list li { border-bottom: 1px solid var(--line); }
+.puzzle-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding: .95rem .5rem;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.puzzle-row:hover { background: var(--panel); }
+.puzzle-row:hover .puzzle-title { color: var(--amber); }
+.puzzle-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.puzzle-title { font-weight: 700; }
+.puzzle-desc { font-family: var(--sans); color: var(--dim); font-size: .9rem; }
+.puzzle-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; font-size: .8rem; color: var(--dim); text-align: right; flex-shrink: 0; }
+.puzzle-meta .done { color: var(--ok); }
+@media (max-width: 520px) {
+  .puzzle-row { flex-direction: column; gap: .4rem; }
+  .puzzle-meta { align-items: flex-start; text-align: left; }
+}
+
+/* ---------- botões ---------- */
+button { font-size: 1rem; }
+.actions button, #nameForm button {
+  background: var(--amber);
+  color: var(--amber-ink);
+  border: 0;
+  border-radius: 8px;
+  padding: .7rem 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.actions button:hover:not(:disabled) { filter: brightness(1.08); }
+.actions button:disabled { opacity: .4; cursor: not-allowed; }
+.actions button.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.actions button.secondary:hover { border-color: var(--amber); color: var(--amber); }
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+
+/* ---------- partida ---------- */
+.game-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.game-head h2 { margin: 0; }
+.stats { display: flex; gap: 1.25rem; margin: 0; }
+.stats div { display: flex; flex-direction: column; }
+.stats dt { color: var(--dim); font-size: .75rem; }
+.stats dd { margin: 0; font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.found-groups { display: grid; gap: 8px; margin-bottom: 8px; }
+.found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: .75rem 1rem;
+  border-radius: 8px;
+  color: #12151a;
+}
+.found strong { font-size: .95rem; }
+.found span { font-size: .85rem; overflow-wrap: anywhere; }
+.level-1.found { background: var(--l1); }
+.level-2.found { background: var(--l2); }
+.level-3.found { background: var(--l3); }
+.level-4.found { background: var(--l4); }
+
+.board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tile {
+  min-height: 4.25rem;
+  padding: .5rem .35rem;
+  background: var(--key);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: 8px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.tile:hover { border-color: var(--amber); }
+.tile.selected {
+  background: var(--amber);
+  color: var(--amber-ink);
+  border-color: #b98621;
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+@media (max-width: 520px) { .tile { font-size: .72rem; min-height: 3.6rem; } }
+
+.feedback { min-height: 1.5rem; margin: 0; font-weight: 600; }
+
+.explanations { display: grid; gap: .75rem; margin-top: 1.5rem; }
+.explain { background: var(--panel); border-left: 4px solid var(--line); border-radius: 0 8px 8px 0; padding: .75rem 1rem; }
+.explain p { margin: 0; color: var(--dim); font-size: .95rem; }
+.explain.level-1 { border-left-color: var(--l1); }
+.explain.level-2 { border-left-color: var(--l2); }
+.explain.level-3 { border-left-color: var(--l3); }
+.explain.level-4 { border-left-color: var(--l4); }
+
+/* ---------- resultado ---------- */
+.score-line { font-size: clamp(3.5rem, 14vw, 6rem); font-weight: 700; margin: 0 0 .5rem; line-height: 1; }
+.score-max { color: var(--dim); font-size: .4em; }
+
+/* ---------- ranking ---------- */
+#rankingFilter { max-width: 22rem; }
+.table-wrap { overflow-x: auto; margin-top: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--dim); font-weight: 600; }
+td:nth-child(n+4), th:nth-child(n+4) { font-variant-numeric: tabular-nums; }
+
+.foot { padding: 1rem; text-align: center; color: var(--dim); font-size: .85rem; border-top: 1px solid var(--line); }
