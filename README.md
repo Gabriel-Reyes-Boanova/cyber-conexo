@@ -1,8 +1,8 @@
 # 🛡️ Cyber Conexo
 
-Jogo web educativo de associação de palavras sobre **Linux e cibersegurança**. O jogador vê 16 termos e precisa separá-los em 4 grupos de 4 palavras relacionadas, aprendendo com a explicação de cada grupo.
+Jogo web educativo de associação de palavras sobre **serviços e nuvem, Apache/PHP, bancos de dados, JavaScript, Linux e cibersegurança**. O jogador vê 16 termos e precisa separá-los em 4 grupos de 4 palavras relacionadas, aprendendo com a explicação de cada grupo.
 
-- **7 tabuleiros** em 3 níveis de dificuldade (permissões, arquivos, redes, hardening, criptografia, ameaças, ferramentas e logs)
+- **8 tabuleiros** em 3 níveis de dificuldade. Iniciante: serviços/VM/nuvem, Apache/PHP/bancos de dados e JavaScript. Depois: redes, hardening, criptografia, ameaças, ferramentas e logs
 - **Nota de 0 a 100** calculada no servidor (25 pontos por grupo)
 - **Dica "quase!"** quando 3 das 4 palavras estão certas
 - **Ranking** por nota, erros e tempo
@@ -145,8 +145,9 @@ Erros seguem o formato `{ "status": 409, "error": "Conflict", "message": "...", 
 | `V2__seed_initial_puzzle.sql` | Primeiro tabuleiro |
 | `V3__add_topic_difficulty_level.sql` | Assunto, dificuldade, nível dos grupos e duração da partida |
 | `V4__linux_cyber_content.sql` | Remove o grupo de SQL e cadastra o conteúdo Linux e segurança |
+| `V5__calendario_e_javascript.sql` | Troca os 2 tabuleiros iniciantes de Linux por conteúdo do calendário (serviços/VM/nuvem e Apache/PHP/bancos) e adiciona JavaScript iniciante |
 
-O Flyway roda sozinho ao iniciar o backend. **Nunca edite uma migration já aplicada**: crie a próxima (`V5__...`). Tabelas: `puzzle`, `word_group`, `word`, `game_session`, `game_found_group`.
+O Flyway roda sozinho ao iniciar o backend. **Nunca edite uma migration já aplicada**: crie a próxima (`V6__...`). Tabelas: `puzzle`, `word_group`, `word`, `game_session`, `game_found_group`.
 
 Para adicionar um tabuleiro novo, crie uma migration com `INSERT` em `puzzle`, `word_group` (4 grupos, níveis 1 a 4) e `word` (4 palavras por grupo, sem repetir palavra no mesmo tabuleiro, em MAIÚSCULAS).
 

@@ -14,7 +14,10 @@ function el(tag, { className, text, attrs } = {}, children = []) {
 }
 
 const DIFFICULTY = { INICIANTE: 'Iniciante', INTERMEDIARIO: 'Intermediário', AVANCADO: 'Avançado' };
-const TOPIC = { LINUX: 'Linux', SEGURANCA: 'Segurança', MISTO: 'Linux e segurança' };
+const TOPIC = {
+  LINUX: 'Linux', SEGURANCA: 'Segurança', MISTO: 'Linux e segurança',
+  INFRA: 'Serviços e nuvem', WEB: 'Web e bancos de dados', JAVASCRIPT: 'JavaScript',
+};
 const NAME_RULE = /^[\p{L}\p{N} _.-]{2,30}$/u;
 
 // Conveniências guardadas só neste navegador (o servidor não confia nelas).

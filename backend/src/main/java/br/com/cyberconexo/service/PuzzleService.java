@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -27,6 +28,7 @@ public class PuzzleService {
     @Transactional(readOnly = true)
     public List<PuzzleSummaryResponse> listActive() {
         return puzzles.findByActiveTrueOrderByIdAsc().stream()
+                .sorted(Comparator.comparing(Puzzle::getDifficulty)) // iniciante → avançado; ordenação estável
                 .map(p -> new PuzzleSummaryResponse(p.getId(), p.getTitle(), p.getDescription(),
                         p.getTopic(), p.getDifficulty()))
                 .toList();
