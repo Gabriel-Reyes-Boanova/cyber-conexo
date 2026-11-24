@@ -161,14 +161,4 @@ Para adicionar um tabuleiro novo, crie uma migration com `INSERT` em `puzzle`, `
 - Senhas apenas no `.env` (fora do Git); a API não tem senha padrão.
 - Erros nunca expõem stack trace ao cliente.
 
-**Limitações do MVP:** sem login, sem HTTPS, sem painel administrativo. Não é um sistema pronto para produção.
 
-## Próximos passos
-
-HTTPS com certificado (Nginx + Let's Encrypt ou certificado interno), modo campanha com os 7 tabuleiros em sequência, painel admin para cadastrar puzzles, testes de integração com Testcontainers e CI no GitHub Actions.
-
-## Documentação
-
-- [Deploy na VM Ubuntu](docs/DEPLOY_VM.md)
-- [Guia do grupo](docs/GUIA_DO_GRUPO.md)
-- [Contexto para outra IA](docs/CONTEXTO_IA.md)
