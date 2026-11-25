@@ -82,6 +82,26 @@ class GameServiceTest {
     }
 
     @Test
+    void wrongGuessReducesScoreByTwoPoints() {
+        service.guess(gameId, req("CHMOD", "CHOWN", "UMASK", "GETFACL"));
+
+        GuessResponse r = service.guess(gameId, req("CHMOD", "LS", "SUDO", "UFW"));
+
+        assertThat(r.mistakes()).isEqualTo(1);
+        assertThat(r.score()).isEqualTo(23);
+    }
+
+    @Test
+    void mistakesBeforeFindingGroupsCannotMakeScoreNegative() {
+        service.guess(gameId, req("CHMOD", "LS", "SUDO", "UFW"));
+        service.guess(gameId, req("CHMOD", "LS", "SUDO", "UFW"));
+
+        GuessResponse r = service.guess(gameId, req("CHMOD", "CHOWN", "UMASK", "GETFACL"));
+
+        assertThat(r.score()).isEqualTo(21);
+    }
+
+    @Test
     void threeOfFourWordsIsReportedAsOneAway() {
         GuessResponse r = service.guess(gameId, req("CHMOD", "CHOWN", "UMASK", "UFW"));
 

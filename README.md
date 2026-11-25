@@ -3,7 +3,7 @@
 Jogo web educativo de associação de palavras sobre **serviços e nuvem, Apache/PHP, bancos de dados, JavaScript, Linux e cibersegurança**. O jogador vê 16 termos e precisa separá-los em 4 grupos de 4 palavras relacionadas, aprendendo com a explicação de cada grupo.
 
 - **8 tabuleiros** em 3 níveis de dificuldade. Iniciante: serviços/VM/nuvem, Apache/PHP/bancos de dados e JavaScript. Depois: redes, hardening, criptografia, ameaças, ferramentas e logs
-- **Nota de 0 a 100** calculada no servidor (25 pontos por grupo)
+- **Nota de 0 a 100** calculada no servidor (25 pontos por grupo, menos 2 pontos por erro)
 - **Dica "quase!"** quando 3 das 4 palavras estão certas
 - **Ranking** por nota, erros e tempo
 - Roda inteiro em **Docker**, pronto para uma **VM Ubuntu**
@@ -95,15 +95,107 @@ cyber-conexo/
    - Host: `database` · Porta: `5432` · Banco: `cyberconexo` · Usuário/senha: os do `.env`
    - Dentro do Docker o host é `database`, nunca `localhost`.
 
-Comandos úteis:
+## Comandos do Docker
+
+Rode todos na pasta do projeto (onde fica o `compose.yaml`). Os comandos marcados com **(destrutivo)** apagam dados e não pedem confirmação.
+
+### Subir e atualizar
 
 ```bash
-docker compose logs -f backend      # acompanhar a API
-docker compose restart backend      # reiniciar só a API
-docker compose down                 # parar tudo (mantém os dados)
-docker compose down -v              # parar e APAGAR o banco (destrutivo)
-docker compose up --build -d        # reconstruir após mudar o código
+docker compose up --build -d              # constrói as imagens e sobe tudo em segundo plano
+docker compose up -d                      # sobe sem reconstruir (usa as imagens já prontas)
+docker compose up -d --force-recreate     # recria os containers mesmo sem mudanças
+docker compose build --no-cache           # reconstrói as imagens do zero, ignorando o cache
 ```
+
+### Parar e reiniciar
+
+```bash
+docker compose stop                       # para os containers, sem removê-los (os dados ficam)
+docker compose start                      # liga de novo os containers parados
+docker compose restart                    # reinicia todos os containers
+docker compose restart backend            # reinicia só a API (troque pelo nome do serviço)
+docker compose stop backend               # para só um serviço
+docker compose down                       # para e REMOVE os containers e a rede (o banco é mantido)
+```
+
+Serviços do projeto: `frontend`, `backend`, `database` e `pgadmin`.
+
+### Apagar dados e resetar
+
+```bash
+# (destrutivo) apaga o banco inteiro (partidas, ranking, tabuleiros) e o volume do pgAdmin
+docker compose down -v
+
+# (destrutivo) reset completo: apaga o banco e sobe tudo de novo
+# o Flyway recria as tabelas e os tabuleiros na inicialização
+docker compose down -v && docker compose up --build -d
+
+# (destrutivo) apaga só as partidas e o ranking; os tabuleiros continuam
+docker compose exec database psql -U cyberuser -d cyberconexo \
+  -c "TRUNCATE game_session CASCADE;"
+
+# (destrutivo) apaga só o volume do banco, mantendo o pgAdmin
+docker compose rm -sf database
+docker volume ls                          # veja o nome do volume (ex.: cyber-conexo_postgres_data)
+docker volume rm cyber-conexo_postgres_data
+docker compose up -d database
+docker compose restart backend            # o Flyway recria o schema ao iniciar
+
+# remove também as imagens construídas localmente (libera espaço; a próxima subida reconstrói)
+docker compose down --rmi local
+```
+
+> Se você trocar a senha do banco no `.env`, o volume continua com a senha antiga. Nesse caso é preciso apagar o volume (`docker compose down -v`) para o banco ser criado com a senha nova.
+
+### Ver estado e logs
+
+```bash
+docker compose ps                         # estado e saúde dos serviços
+docker compose ps -a                      # inclui os containers parados
+docker compose logs -f backend            # acompanha a API (Ctrl+C para sair)
+docker compose logs --tail 100 backend    # últimas 100 linhas
+docker compose logs -f                    # logs de todos os serviços
+docker compose top                        # processos dentro dos containers
+docker stats --no-stream                  # uso de CPU e memória
+docker compose config                     # mostra o compose.yaml já com as variáveis do .env
+```
+
+### Entrar nos containers
+
+```bash
+docker compose exec database psql -U cyberuser -d cyberconexo   # console SQL do PostgreSQL
+docker compose exec backend bash          # terminal dentro da API
+docker compose exec frontend sh           # terminal dentro do Nginx
+```
+
+No `psql`: `\dt` lista as tabelas, `\d game_session` mostra as colunas, `SELECT * FROM flyway_schema_history;` mostra as migrations aplicadas e `\q` sai.
+
+### Backup e restauração
+
+```bash
+# backup
+docker compose exec -T database pg_dump -U cyberuser cyberconexo > backup_$(date +%F).sql
+
+# restauração (em banco vazio)
+docker compose down -v
+docker compose up -d database
+docker compose exec -T database psql -U cyberuser -d cyberconexo < backup_AAAA-MM-DD.sql
+docker compose up -d
+```
+
+### Limpeza de espaço em disco
+
+```bash
+docker system df                          # quanto espaço o Docker está usando
+docker image prune                        # remove imagens soltas (sem nome)
+docker builder prune                      # limpa o cache de construção
+docker system prune                       # remove containers parados, redes e imagens soltas sem uso
+docker volume ls                          # lista os volumes (confira antes de apagar qualquer um)
+docker volume prune                       # (destrutivo) remove volumes sem container associado
+```
+
+> Evite `docker system prune -a --volumes` e `docker volume prune` com o projeto parado: eles podem apagar o volume do banco.
 
 ### Desenvolvimento sem Docker (opcional)
 
@@ -133,9 +225,10 @@ Erros seguem o formato `{ "status": 409, "error": "Conflict", "message": "...", 
 ## Regras do jogo
 
 - 16 palavras, 4 grupos de 4; o jogador seleciona exatamente 4 por tentativa.
-- Cada grupo certo vale 25 pontos (máximo 100). Erros são contados, mas não tiram pontos.
+- Cada grupo certo vale 25 pontos (máximo 100); cada tentativa errada reduz 2 pontos, sem deixar a nota ficar negativa.
 - Um grupo não pontua duas vezes na mesma partida.
 - Categoria, explicação e nível de um grupo só são enviados depois que ele é descoberto.
+- Ao concluir, a tela de resultado mostra os quatro grupos e suas explicações, além da opção de voltar ao menu.
 
 ## Banco de dados e migrations
 
@@ -161,5 +254,3 @@ Para adicionar um tabuleiro novo, crie uma migration com `INSERT` em `puzzle`, `
 - Banco e API não são publicados; pgAdmin só em `127.0.0.1`.
 - Senhas apenas no `.env` (fora do Git); a API não tem senha padrão.
 - Erros nunca expõem stack trace ao cliente.
-
-
