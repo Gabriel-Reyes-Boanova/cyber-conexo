@@ -20,8 +20,9 @@ public class GameSession {
     @JoinColumn(name = "puzzle_id", nullable = false)
     private Puzzle puzzle;
 
-    @Column(name = "player_name", nullable = false, length = 80)
-    private String playerName;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
     @Column(nullable = false)
     private int score = 0;
@@ -49,9 +50,9 @@ public class GameSession {
 
     protected GameSession() { }
 
-    public GameSession(Puzzle puzzle, String playerName) {
+    public GameSession(Puzzle puzzle, Player player) {
         this.puzzle = puzzle;
-        this.playerName = playerName;
+        this.player = player;
         this.startedAt = LocalDateTime.now();
     }
 
@@ -87,7 +88,8 @@ public class GameSession {
 
     public UUID getId() { return id; }
     public Puzzle getPuzzle() { return puzzle; }
-    public String getPlayerName() { return playerName; }
+    public Player getPlayer() { return player; }
+    public String getPlayerName() { return player.getName(); }
     public int getScore() { return score; }
     public int getMistakes() { return mistakes; }
     public boolean isCompleted() { return completed; }

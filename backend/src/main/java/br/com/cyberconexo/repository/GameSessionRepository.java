@@ -19,16 +19,22 @@ public interface GameSessionRepository extends JpaRepository<GameSession, UUID> 
     Optional<GameSession> findByIdForUpdate(@Param("id") UUID id);
 
     @Query("""
-            select g from GameSession g join fetch g.puzzle
+            select g from GameSession g join fetch g.puzzle join fetch g.player
             where g.completed = true
             order by g.score desc, g.mistakes asc, g.durationSeconds asc
             """)
     List<GameSession> findRanking(Pageable pageable);
 
     @Query("""
-            select g from GameSession g join fetch g.puzzle
+            select g from GameSession g join fetch g.puzzle join fetch g.player
             where g.completed = true and g.puzzle.id = :puzzleId
             order by g.score desc, g.mistakes asc, g.durationSeconds asc
             """)
     List<GameSession> findRankingByPuzzle(@Param("puzzleId") Long puzzleId, Pageable pageable);
+
+    @Query("""
+            select g from GameSession g join fetch g.puzzle
+            where g.completed = true and g.player.id = :playerId
+            """)
+    List<GameSession> findCompletedByPlayer(@Param("playerId") UUID playerId);
 }

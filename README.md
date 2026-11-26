@@ -42,15 +42,15 @@ cyber-conexo/
 ├── backend/
 │   ├── src/main/java/br/com/cyberconexo/
 │   │   ├── config/        CORS opcional
-│   │   ├── controller/    Puzzle, Game, Ranking
+│   │   ├── controller/    Puzzle, Player, Game, Ranking
 │   │   ├── dto/           contratos de entrada e saída (records)
-│   │   ├── entity/        Puzzle, WordGroup, Word, GameSession
+│   │   ├── entity/        Puzzle, WordGroup, Word, Player, GameSession
 │   │   ├── exception/     erros de negócio + handler global
 │   │   ├── repository/    interfaces Spring Data JPA
-│   │   └── service/       PuzzleService, GameService, RankingService
+│   │   └── service/       PuzzleService, PlayerService, GameService, RankingService
 │   ├── src/main/resources/
 │   │   ├── application.yml
-│   │   └── db/migration/  V1 a V4
+│   │   └── db/migration/  V1 a V6
 │   ├── src/test/          testes das regras do jogo
 │   ├── Dockerfile
 │   └── pom.xml
@@ -215,7 +215,9 @@ Com `SWAGGER_ENABLED=true`, a documentação interativa fica em `http://localhos
 |---|---|---|
 | GET | `/api/puzzles` | Lista os tabuleiros ativos |
 | GET | `/api/puzzles/{id}` | Palavras embaralhadas, sem gabarito |
-| POST | `/api/games` | Inicia partida. Body: `{"playerName":"ana","puzzleId":1}` |
+| POST | `/api/players/login` | Entra com o nome: acha o jogador ou cria um novo e devolve o histórico. Body: `{"name":"ana"}` |
+| GET | `/api/players/{id}` | Jogador e melhor partida concluída por tabuleiro |
+| POST | `/api/games` | Inicia partida. Body: `{"playerId":"<uuid>","puzzleId":1}` |
 | POST | `/api/games/{id}/guesses` | Tenta um grupo. Body: `{"words":["CHMOD","CHOWN","UMASK","GETFACL"]}` |
 | GET | `/api/games/{id}` | Estado da partida (nota, erros, tempo) |
 | GET | `/api/ranking?puzzleId=1&limit=10` | Melhores partidas concluídas |
@@ -239,8 +241,9 @@ Erros seguem o formato `{ "status": 409, "error": "Conflict", "message": "...", 
 | `V3__add_topic_difficulty_level.sql` | Assunto, dificuldade, nível dos grupos e duração da partida |
 | `V4__linux_cyber_content.sql` | Remove o grupo de SQL e cadastra o conteúdo Linux e segurança |
 | `V5__calendario_e_javascript.sql` | Troca os 2 tabuleiros iniciantes de Linux por conteúdo do calendário (serviços/VM/nuvem e Apache/PHP/bancos) e adiciona JavaScript iniciante |
+| `V6__create_player.sql` | Cria a tabela `player` (nome único sem diferenciar maiúsculas), liga `game_session` ao jogador e migra os nomes das partidas antigas |
 
-O Flyway roda sozinho ao iniciar o backend. **Nunca edite uma migration já aplicada**: crie a próxima (`V6__...`). Tabelas: `puzzle`, `word_group`, `word`, `game_session`, `game_found_group`.
+O Flyway roda sozinho ao iniciar o backend. **Nunca edite uma migration já aplicada**: crie a próxima (`V7__...`). Tabelas: `puzzle`, `word_group`, `word`, `player`, `game_session`, `game_found_group`.
 
 Para adicionar um tabuleiro novo, crie uma migration com `INSERT` em `puzzle`, `word_group` (4 grupos, níveis 1 a 4) e `word` (4 palavras por grupo, sem repetir palavra no mesmo tabuleiro, em MAIÚSCULAS).
 
@@ -250,6 +253,7 @@ Para adicionar um tabuleiro novo, crie uma migration com `INSERT` em `puzzle`, `
 - Consultas via Spring Data (parametrizadas), sem SQL montado por concatenação.
 - Dois envios simultâneos não pontuam em dobro (trava `PESSIMISTIC_WRITE` na partida + chave primária em `game_found_group`).
 - Nome do jogador validado no backend e exibido no front só com `textContent` (sem XSS).
+- O jogador é identificado só pelo nome (sem senha): quem digitar o mesmo nome acessa o mesmo histórico. O progresso fica no banco, o navegador não guarda nada (sem `localStorage`).
 - Nginx com limite de requisições (mais rígido nas tentativas), cabeçalhos de segurança e CSP.
 - Banco e API não são publicados; pgAdmin só em `127.0.0.1`.
 - Senhas apenas no `.env` (fora do Git); a API não tem senha padrão.

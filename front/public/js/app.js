@@ -20,16 +20,6 @@ const TOPIC = {
 };
 const NAME_RULE = /^[\p{L}\p{N} _.-]{2,30}$/u;
 
-// Conveniências guardadas só neste navegador (o servidor não confia nelas).
-const store = {
-  get(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
-  },
-  set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* armazenamento indisponível */ }
-  },
-};
-
 function formatTime(totalSeconds) {
   const s = Math.max(0, Math.round(totalSeconds));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -46,6 +36,8 @@ function shuffled(list) {
 
 // ---------- estado ----------
 const state = {
+  player: null,      // { id, name } — vem do banco depois do login, nunca do navegador
+  done: {},          // puzzleId -> melhor nota (vem do banco)
   puzzles: [],
   puzzle: null,      // tabuleiro em andamento
   gameId: null,
@@ -61,7 +53,7 @@ const state = {
 };
 
 // ---------- telas ----------
-const SCREENS = ['screenHome', 'screenGame', 'screenResult', 'screenRanking'];
+const SCREENS = ['screenLogin', 'screenHome', 'screenGame', 'screenResult', 'screenRanking'];
 
 function show(screenId) {
   SCREENS.forEach((id) => { $(id).hidden = id !== screenId; });
@@ -72,6 +64,60 @@ function say(id, text, kind = '') {
   const node = $(id);
   node.textContent = text;
   node.className = (node.className.split(' ')[0] || '') + (kind ? ` ${kind}` : '');
+}
+
+// ---------- login ----------
+function applyPlayer(player) {
+  state.player = { id: player.playerId, name: player.name };
+  state.done = Object.fromEntries(player.progress.map((p) => [p.puzzleId, p.score]));
+}
+
+async function login(event) {
+  event.preventDefault();
+  if (state.busy) return;
+  const input = $('playerName');
+  const name = input.value.trim();
+  if (!NAME_RULE.test(name)) {
+    say('loginMessage', 'Nome inválido. Use de 2 a 30 letras, números, espaço, ponto, hífen ou sublinhado.', 'error');
+    input.focus();
+    return;
+  }
+
+  state.busy = true;
+  $('loginButton').disabled = true;
+  say('loginMessage', 'Entrando…');
+  try {
+    const player = await api.login(name);
+    applyPlayer(player);
+    $('playerLabel').textContent = player.name;
+    const played = player.progress.length;
+    say('welcomeMessage', player.newPlayer
+      ? 'Jogador criado! Seu progresso será salvo automaticamente.'
+      : `Bem-vindo de volta! Você já concluiu ${played} ${played === 1 ? 'tabuleiro' : 'tabuleiros'}.`);
+    say('loginMessage', '');
+    renderPuzzleList();
+    show('screenHome');
+  } catch (e) {
+    say('loginMessage', e.message, 'error');
+  } finally {
+    state.busy = false;
+    $('loginButton').disabled = false;
+  }
+}
+
+function logout() {
+  stopTimer();
+  state.player = null;
+  state.done = {};
+  $('playerName').value = '';
+  say('loginMessage', '');
+  show('screenLogin');
+}
+
+/** Volta ao menu certo: o início se já entrou, senão a tela de nome. */
+function goHome() {
+  stopTimer();
+  show(state.player ? 'screenHome' : 'screenLogin');
 }
 
 // ---------- início ----------
@@ -88,7 +134,7 @@ async function loadPuzzles() {
 }
 
 function renderPuzzleList() {
-  const done = store.get('cc.done', {});
+  const done = state.done;
   const list = $('puzzleList');
   list.replaceChildren(...state.puzzles.map((p) => {
     const score = done[p.id];
@@ -108,28 +154,15 @@ function renderPuzzleList() {
   }));
 }
 
-function readName() {
-  const input = $('playerName');
-  const name = input.value.trim();
-  if (!NAME_RULE.test(name)) {
-    say('homeMessage', 'Nome inválido. Use de 2 a 30 letras, números, espaço, ponto, hífen ou sublinhado.', 'error');
-    input.focus();
-    return null;
-  }
-  store.set('cc.name', name);
-  return name;
-}
-
 // ---------- partida ----------
 async function startGame(puzzle) {
   if (state.busy) return;
-  const name = readName();
-  if (!name) return;
+  if (!state.player) { show('screenLogin'); return; }
 
   state.busy = true;
   say('homeMessage', 'Iniciando partida…');
   try {
-    const game = await api.startGame(name, puzzle.id);
+    const game = await api.startGame(state.player.id, puzzle.id);
     Object.assign(state, {
       puzzle,
       gameId: game.gameId,
@@ -265,9 +298,9 @@ function addFoundGroup(result, words) {
 async function finishGame() {
   stopTimer();
   const info = await api.gameState(state.gameId);
-  const done = store.get('cc.done', {});
-  done[state.puzzle.id] = info.score;
-  store.set('cc.done', done);
+  // O histórico vem do banco (a partida já foi gravada pelo servidor).
+  try { applyPlayer(await api.player(state.player.id)); } catch { /* mantém o que já está na tela */ }
+  state.done[state.puzzle.id] ??= info.score;
 
   $('resultGroups').replaceChildren(...Array.from($('foundGroups').children, (node) => node.cloneNode(true)));
   $('resultExplanations').replaceChildren(...Array.from($('explanations').children, (node) => node.cloneNode(true)));
@@ -283,7 +316,7 @@ async function finishGame() {
 }
 
 function nextPuzzle() {
-  const done = store.get('cc.done', {});
+  const done = state.done;
   const idx = state.puzzles.findIndex((p) => p.id === state.puzzle.id);
   const ordered = [...state.puzzles.slice(idx + 1), ...state.puzzles.slice(0, idx)];
   return ordered.find((p) => done[p.id] === undefined) ?? null;
@@ -325,17 +358,17 @@ async function loadRanking() {
 }
 
 // ---------- eventos ----------
-$('nameForm').addEventListener('submit', (e) => e.preventDefault());
+$('nameForm').addEventListener('submit', login);
+$('switchPlayerButton').addEventListener('click', logout);
 $('guessButton').addEventListener('click', submitGuess);
 $('hintButton').addEventListener('click', revealHint);
 $('clearButton').addEventListener('click', () => { state.selected.clear(); renderBoard(); say('feedback', 'Seleção limpa.'); });
 $('shuffleButton').addEventListener('click', () => { state.board = shuffled(state.board); renderBoard(); });
-$('navHome').addEventListener('click', () => { stopTimer(); show('screenHome'); });
+$('navHome').addEventListener('click', goHome);
 $('navRanking').addEventListener('click', () => { stopTimer(); openRanking(''); });
 $('rankingFilter').addEventListener('change', loadRanking);
 $('nextPuzzleButton').addEventListener('click', () => { const n = nextPuzzle(); if (n) startGame(n); });
 $('resultRankingButton').addEventListener('click', () => openRanking(state.puzzle?.id ?? ''));
-$('resultHomeButton').addEventListener('click', () => show('screenHome'));
+$('resultHomeButton').addEventListener('click', goHome);
 
-$('playerName').value = store.get('cc.name', '');
 loadPuzzles();

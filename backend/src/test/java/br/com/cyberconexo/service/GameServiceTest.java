@@ -3,12 +3,14 @@ package br.com.cyberconexo.service;
 import br.com.cyberconexo.dto.GuessRequest;
 import br.com.cyberconexo.dto.GuessResponse;
 import br.com.cyberconexo.entity.GameSession;
+import br.com.cyberconexo.entity.Player;
 import br.com.cyberconexo.entity.Puzzle;
 import br.com.cyberconexo.entity.Word;
 import br.com.cyberconexo.entity.WordGroup;
 import br.com.cyberconexo.exception.BadRequestException;
 import br.com.cyberconexo.exception.ConflictException;
 import br.com.cyberconexo.repository.GameSessionRepository;
+import br.com.cyberconexo.repository.PlayerRepository;
 import br.com.cyberconexo.repository.PuzzleRepository;
 import br.com.cyberconexo.repository.WordGroupRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +35,7 @@ class GameServiceTest {
 
     @Mock GameSessionRepository sessions;
     @Mock PuzzleRepository puzzles;
+    @Mock PlayerRepository players;
     @Mock WordGroupRepository groups;
     @Mock PuzzleService puzzleService;
 
@@ -42,11 +45,14 @@ class GameServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GameService(sessions, puzzles, groups, puzzleService);
+        service = new GameService(sessions, puzzles, players, groups, puzzleService);
 
         Puzzle puzzle = BeanUtils.instantiateClass(Puzzle.class);
         ReflectionTestUtils.setField(puzzle, "id", 1L);
-        game = new GameSession(puzzle, "Aluno");
+        Player player = BeanUtils.instantiateClass(Player.class);
+        ReflectionTestUtils.setField(player, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(player, "name", "Aluno");
+        game = new GameSession(puzzle, player);
 
         List<WordGroup> puzzleGroups = List.of(
                 group(1L, 3, "CHMOD", "CHOWN", "UMASK", "GETFACL"),

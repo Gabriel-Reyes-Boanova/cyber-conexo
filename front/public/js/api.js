@@ -28,8 +28,12 @@ async function request(path, options = {}) {
 export const api = {
   listPuzzles: () => request('/puzzles'),
 
-  startGame: (playerName, puzzleId) =>
-    request('/games', { method: 'POST', body: JSON.stringify({ playerName, puzzleId }) }),
+  login: (name) => request('/players/login', { method: 'POST', body: JSON.stringify({ name }) }),
+
+  player: (playerId) => request(`/players/${encodeURIComponent(playerId)}`),
+
+  startGame: (playerId, puzzleId) =>
+    request('/games', { method: 'POST', body: JSON.stringify({ playerId, puzzleId }) }),
 
   guess: (gameId, words) =>
     request(`/games/${encodeURIComponent(gameId)}/guesses`, { method: 'POST', body: JSON.stringify({ words }) }),

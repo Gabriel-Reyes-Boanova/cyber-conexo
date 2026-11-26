@@ -23,16 +23,27 @@
 
   <main class="page">
 
-    <!-- Início: nome + escolha do tabuleiro -->
-    <section id="screenHome">
+    <!-- Entrada: o jogador digita o nome (já existe = carrega o histórico; novo = cria) -->
+    <section id="screenLogin">
       <h1>Cyber Conexo</h1>
       <p class="lead">São 16 palavras sobre tecnologia. Encontre os quatro grupos de quatro palavras que têm algo em comum.</p>
 
       <form id="nameForm" class="name-form" autocomplete="off">
-        <label for="playerName">Seu nome no ranking</label>
+        <label for="playerName">Seu nome</label>
         <input id="playerName" name="playerName" minlength="2" maxlength="30" required placeholder="ex.: ana.silva">
-        <p class="hint">Letras, números, espaço, ponto, hífen e sublinhado. De 2 a 30 caracteres.</p>
+        <p class="hint">Se você já jogou, é só digitar o mesmo nome para continuar de onde parou. Letras, números, espaço, ponto, hífen e sublinhado. De 2 a 30 caracteres.</p>
+        <div class="actions">
+          <button type="submit" id="loginButton">Entrar</button>
+        </div>
+        <p id="loginMessage" class="message" role="status" aria-live="polite"></p>
       </form>
+    </section>
+
+    <!-- Início: escolha do tabuleiro -->
+    <section id="screenHome" hidden>
+      <h1>Cyber Conexo</h1>
+      <p class="lead">Jogador: <strong id="playerLabel"></strong> <button type="button" class="link" id="switchPlayerButton">Trocar jogador</button></p>
+      <p id="welcomeMessage" class="hint"></p>
 
       <h2>Escolha um tabuleiro</h2>
       <p id="homeMessage" class="message" role="status" aria-live="polite"></p>

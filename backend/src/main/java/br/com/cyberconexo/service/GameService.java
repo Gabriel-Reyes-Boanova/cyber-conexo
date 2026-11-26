@@ -2,12 +2,14 @@ package br.com.cyberconexo.service;
 
 import br.com.cyberconexo.dto.*;
 import br.com.cyberconexo.entity.GameSession;
+import br.com.cyberconexo.entity.Player;
 import br.com.cyberconexo.entity.Puzzle;
 import br.com.cyberconexo.entity.WordGroup;
 import br.com.cyberconexo.exception.BadRequestException;
 import br.com.cyberconexo.exception.ConflictException;
 import br.com.cyberconexo.exception.ResourceNotFoundException;
 import br.com.cyberconexo.repository.GameSessionRepository;
+import br.com.cyberconexo.repository.PlayerRepository;
 import br.com.cyberconexo.repository.PuzzleRepository;
 import br.com.cyberconexo.repository.WordGroupRepository;
 import org.springframework.stereotype.Service;
@@ -35,13 +37,15 @@ public class GameService {
 
     private final GameSessionRepository sessions;
     private final PuzzleRepository puzzles;
+    private final PlayerRepository players;
     private final WordGroupRepository groups;
     private final PuzzleService puzzleService;
 
-    public GameService(GameSessionRepository sessions, PuzzleRepository puzzles,
+    public GameService(GameSessionRepository sessions, PuzzleRepository puzzles, PlayerRepository players,
                        WordGroupRepository groups, PuzzleService puzzleService) {
         this.sessions = sessions;
         this.puzzles = puzzles;
+        this.players = players;
         this.groups = groups;
         this.puzzleService = puzzleService;
     }
@@ -50,7 +54,9 @@ public class GameService {
     public StartGameResponse start(StartGameRequest request) {
         Puzzle puzzle = puzzles.findByIdAndActiveTrue(request.puzzleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tabuleiro não encontrado."));
-        GameSession game = sessions.save(new GameSession(puzzle, request.playerName().trim()));
+        Player player = players.findById(request.playerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Jogador não encontrado. Entre com seu nome de novo."));
+        GameSession game = sessions.save(new GameSession(puzzle, player));
         List<WordGroup> puzzleGroups = groups.findAllWithWordsByPuzzleId(puzzle.getId());
         List<List<String>> hintGroups = puzzleGroups.stream().map(group -> {
             List<String> words = new ArrayList<>(group.getWords().stream().map(w -> w.getValue()).toList());
