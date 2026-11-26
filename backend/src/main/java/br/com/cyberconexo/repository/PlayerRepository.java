@@ -1,4 +1,4 @@
-docker compose pspackage br.com.cyberconexo.repository;
+package br.com.cyberconexo.repository;
 
 import br.com.cyberconexo.entity.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
