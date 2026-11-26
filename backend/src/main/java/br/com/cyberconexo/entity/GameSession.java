@@ -59,6 +59,7 @@ public class GameSession {
 
     public void registerMistake() {
         this.mistakes++;
+        this.score = Math.max(0, this.score - 2);
     }
 
     /** Marca o grupo como encontrado e recalcula pontos; encerra a partida se foi o último. */
@@ -66,7 +67,7 @@ public class GameSession {
         if (!foundGroupIds.add(groupId)) {
             return; // já contado: nunca pontua duas vezes
         }
-        this.score = foundGroupIds.size() * pointsPerGroup;
+        this.score = Math.max(0, foundGroupIds.size() * pointsPerGroup - mistakes * 2);
         if (foundGroupIds.size() >= totalGroups) {
             this.completed = true;
             this.finishedAt = LocalDateTime.now();

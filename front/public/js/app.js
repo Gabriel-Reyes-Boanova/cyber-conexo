@@ -269,6 +269,8 @@ async function finishGame() {
   done[state.puzzle.id] = info.score;
   store.set('cc.done', done);
 
+  $('resultGroups').replaceChildren(...Array.from($('foundGroups').children, (node) => node.cloneNode(true)));
+  $('resultExplanations').replaceChildren(...Array.from($('explanations').children, (node) => node.cloneNode(true)));
   $('resultScore').textContent = info.score;
   $('resultDetails').textContent =
     `Você encontrou ${info.groupsFound} grupos em ${formatTime(info.durationSeconds)} ` +

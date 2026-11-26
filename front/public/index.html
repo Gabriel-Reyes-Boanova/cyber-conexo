@@ -70,13 +70,16 @@
 
     <!-- Resultado -->
     <section id="screenResult" hidden>
-      <h2>Tabuleiro concluído</h2>
+      <h2>Partida concluída!</h2>
+      <p class="lead">Parabéns! Você encontrou os quatro grupos e seus contextos:</p>
+      <div id="resultGroups" class="found-groups"></div>
+      <div id="resultExplanations" class="explanations"></div>
       <p class="score-line"><span id="resultScore">100</span><span class="score-max">/100</span></p>
       <p id="resultDetails" class="lead"></p>
       <div class="actions">
         <button type="button" id="nextPuzzleButton">Próximo tabuleiro</button>
         <button type="button" class="secondary" id="resultRankingButton">Ver ranking</button>
-        <button type="button" class="secondary" id="resultHomeButton">Escolher outro</button>
+        <button type="button" class="secondary" id="resultHomeButton">Voltar ao menu</button>
       </div>
     </section>
 
